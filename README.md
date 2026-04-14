@@ -39,7 +39,7 @@ Browse files by date
 Read explanation comments inside code
 Practice similar problems
 🤝 Connect With Me
-💼 LinkedIn: (Add your link here)
+💼 LinkedIn: https://www.linkedin.com/in/navinkumar-t-245b46336/
 💻 GitHub: https://github.com/777navin
 ⭐ Support
 

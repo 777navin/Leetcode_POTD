@@ -1,0 +1,143 @@
+/*
+=========================================================
+Date        : 04-11-2026
+Problem Name: Minimum Operations to Make Elements Within K Subarrays Equal
+Platform    : LeetCode
+Difficulty  : Hard
+Tags        : DP, Sliding Window, Median, Multiset
+
+Problem Summary:
+- We need at least k non-overlapping subarrays of size x.
+- Every chosen subarray must contain equal values.
+- One operation = increase/decrease an element by 1.
+- Return minimum total operations.
+
+Key Observation:
+- Median minimizes sum of absolute differences.
+- Compute every window cost, then perform DP.
+=========================================================
+*/
+
+class Solution {
+    using ll = long long;
+    static constexpr ll INF = (ll)4e18;
+
+    struct SlidingMedian {
+        multiset<int, greater<int>> left;
+        multiset<int> right;
+
+        ll leftSum = 0;
+        ll rightSum = 0;
+
+        void rebalance() {
+            while (left.size() < right.size()) {
+                int v = *right.begin();
+
+                right.erase(right.begin());
+                rightSum -= v;
+
+                left.insert(v);
+                leftSum += v;
+            }
+
+            while (left.size() > right.size() + 1) {
+                int v = *left.begin();
+
+                left.erase(left.begin());
+                leftSum -= v;
+
+                right.insert(v);
+                rightSum += v;
+            }
+        }
+
+        void add(int val) {
+            if (left.empty() || val <= *left.begin()) {
+                left.insert(val);
+                leftSum += val;
+            } else {
+                right.insert(val);
+                rightSum += val;
+            }
+
+            rebalance();
+        }
+
+        void remove(int val) {
+            auto it = left.find(val);
+
+            if (it != left.end()) {
+                left.erase(it);
+                leftSum -= val;
+            } else {
+                right.erase(right.find(val));
+                rightSum -= val;
+            }
+
+            rebalance();
+        }
+
+        ll cost() {
+            ll median = *left.begin();
+
+            ll leftCost =
+                median * (ll)left.size() - leftSum;
+
+            ll rightCost =
+                rightSum - median * (ll)right.size();
+
+            return leftCost + rightCost;
+        }
+    };
+
+public:
+    long long minOperations(vector<int>& nums, int x, int k) {
+        int n = (int)nums.size();
+
+        /*
+        cost[i] =
+        minimum operations needed to make
+        window ending at i-1 (size x) equal.
+        */
+        vector<ll> cost(n + 1, INF);
+
+        SlidingMedian sw;
+
+        for (int i = 0; i < n; i++) {
+            if (i - x >= 0)
+                sw.remove(nums[i - x]);
+
+            sw.add(nums[i]);
+
+            if (i >= x - 1)
+                cost[i + 1] = sw.cost();
+        }
+
+        /*
+        DP:
+        dp[j] = answer using first j elements
+        after selecting current number of windows.
+        */
+        vector<ll> dp(n + 1, 0);
+
+        for (int cnt = 1; cnt <= k; cnt++) {
+            vector<ll> ndp(n + 1, INF);
+
+            for (int j = cnt * x; j <= n; j++) {
+
+                ndp[j] = ndp[j - 1];
+
+                if (dp[j - x] != INF) {
+                    ndp[j] = min(
+                        ndp[j],
+                        dp[j - x] + cost[j]
+                    );
+                }
+            }
+
+            dp = move(ndp);
+        }
+
+        return dp[n];
+    }
+};
